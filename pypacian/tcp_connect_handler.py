@@ -5,6 +5,7 @@
 ''' import modules
 '''
 from scapy.all import *
+import copy
 
 __NOT_ESTABLISHED__ = 'NOT Established'
 __ESTABLISHED__ = 'Established'
@@ -23,25 +24,32 @@ class TCP_CONNECT:
         self.dport = dport
         self.ip = IP(dst = self.dst)
         self.tcp = TCP(sport = self.sport, dport = self.dport, flags = 'S', seq = 100)
+        self.rcv_pkt = self.ip / self.tcp
         self.status = __NOT_ESTABLISHED__
+        
 
         
     def synchronize(self):
         ''' request for TCP connection
         '''
         self.tcp.flags = 'S'
-        # send sync & get ack
+        ''' send sync & get ack
+        '''
         syn = self.ip / self.tcp
-        self.syn_ack = sr1(syn)
-        # send sync
+        # self.syn_ack = sr1(syn)
+        self.rcv_pkt = sr1(syn)
+        ''' send sync
+        '''
         self.tcp.seq += 1
-        self.tcp.ack = self.syn_ack.seq + 1
+        # self.tcp.ack = self.syn_ack.seq + 1
+        self.tcp.ack = self.rcv_pkt.seq + 1
         self.tcp.flags = 'A'
         ack = self.ip / self.tcp
         send(ack)
         self.status = __ESTABLISHED__
         return syn, self.syn_ack, ack
 
+    
     def wait_for_syn(self):
         ''' wait for syn packet from a client as a server
         '''
@@ -55,46 +63,65 @@ class TCP_CONNECT:
                     break
             except IndexError:
                 pass
+        self.rcv_pkt = pkt
         syn_ack = self.ip / TCP(sport = self.sport,
                                 dport = self.dport,
                                 flags = 'SA',
-                                seq = pkt.ack,
-                                ack = pkt.seq + 1)
-        pkt = sr1(syn_ack)
-        if pkt[TCP].flags == 'A':
-            self.status = __ESTABLISHED__
-            return
-        else:
+                                seq = self.rcv_pkt.ack,
+                                ack = self.rcv_pkt.seq + 1)
+                                # seq = pkt.ack,
+                                # ack = pkt.seq + 1)
+        self.rcv_pkt = sr1(syn_ack)
+        try:
+            if self.rcv_pkt[TCP].flags == 'A':
+                self.status = __ESTABLISHED__
+                return
+            else:
+                self.reset()
+        except IndexError:
             self.reset()
-            return
+        return
+
+    def send_camouflage_tcp(self, load):
+        self.tcp.flags = 'PA'
+        self.tcp.seq = self.rcv_pkt.ack
+        self.tcp.seq = self.rcv_pkt.seq + len(self.rcv_pkt.load)
+        pkt = self.ip / self.tcp /load
+        self.rcv_pkt = sr1(pkt)
         
     def reset(self):
-        ''' to be written
+        ''' send RST packet
+        to be confirmed...
         '''
-        pass
-            
-
-
+        self.tcp.flags = 'R'
+        reset_pkt = self.ip / self.tcp
+        send(reset_pkt)
+        
     
     def finish(self):
         ''' finish for TCP connection
         '''
 
-        # send FIN packet
-        self.tcp.seq 
+        ''' send FIN packet
+        '''
         fin = self.ip / TCP(sport = self.sport,
                             dport = self.dport,
                             flags = 'FA',
-                            seq = self.syn_ack.ack,
-                            ack = self.syn_ack.seq + 1)
-        self.fin_ack = sr1(fin)
+                            seq = self.rcv_pkt.ack,
+                            ack = self.rcv_pkt.seq + 1)
+                            # seq = self.syn_ack.ack,
+                            # ack = self.syn_ack.seq + 1)
+        # self.fin_ack = sr1(fin)
+        self.rcv_pkt = sr1(fin)
 
         # return final ACK
         lastack = self.ip / TCP(sport = self.sport,
                                 dport = self.dport,
                                 flags = 'A',
-                                seq = self.fin_ack.ack,
-                                ack = self.fin_ack.seq + 1)
+                                seq = self.rcv_pkt.ack,
+                                ack = self.rcv_pkt.seq + 1 )
+                                # seq = self.fin_ack.ack,
+                                # ack = self.fin_ack.seq + 1)
         # self.tcp.ack = fin_ack.seq + 1
         # self.tcp
         # self.tcp.flags = 'A'
@@ -102,5 +129,6 @@ class TCP_CONNECT:
         send(lastack)
         
     def __del__(self):
-        self.finish()
+        self.reset()
+        # self.finish()
     

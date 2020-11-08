@@ -16,8 +16,17 @@ PyPacian capture packets from NIC and transfer other PC.
     1. PyPacian monitor each packet which are got from source NIC.
     1. PyPacian transfer every packet when packet match filter.
 
-# Installation
+## Installation
 TBD
 
-# How to Use
+## How to Use
 TBD
+
+```text
+$ git clone https://github.com/montblanc18/persephonep.git
+$ cd persephonep
+$ python -m venv .venv
+$ source venv/bin/activate
+$ pip install -U pip
+$ pip install -e . -r requirements.txt
+```

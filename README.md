@@ -3,6 +3,12 @@
 PyPacian (Python Packet Technician) is a packet capturing, editing, and sending tool for Python.
 PyPacian capture packets from NIC and transfer other PC.
 
+## System Overview
+
+![system_overview](./docs/system_overview.svg)
+
+
+
 ## System
 
 - Set pypacian.cfg

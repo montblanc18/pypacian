@@ -3,15 +3,16 @@
 #
 
 
-''' import modules
-''' 
+""" import modules
+"""
 from scapy.all import *
 
 
-''' import self-modules
-'''
+""" import self-modules
+"""
 from pypacian.tcp_connect_handler import *
 from pypacian.arp_spoofing import *
+from pypacian.connect_handler import *
 
 
 # キャプチャする機能
@@ -27,4 +28,3 @@ from pypacian.arp_spoofing import *
 # ++ 時刻は「ファイルの開始時刻+timedelta」で差分を取ること。
 # ++ timer割り込みを実行し、実行時間を過ぎているイベントがあれば実行すること。
 # +++ なるべく軽量じゃないとここが分づまる
-

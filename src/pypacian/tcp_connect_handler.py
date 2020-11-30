@@ -133,12 +133,12 @@ class TCP_CONNECT:
 class TcpHandler(threading.Thread):
     def __init__(self, host="", ip="", src_port=0, dst_port=0, mode=""):
         super(TcpHandler, self).__init__()
-
         self.src_port = src_port
         self.dst_port = dst_port
         self.ip = ip
         self.host = host
         self.mode = mode
+        print(mode)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def run(self):
@@ -154,6 +154,9 @@ class TcpHandler(threading.Thread):
             self.sock.connect((self.ip, self.dst_port))
         else:
             print("error")
+
+    def stop(self):
+        self.__del__()
 
     def __del__(self):
         self.sock.close()

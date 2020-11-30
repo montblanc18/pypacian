@@ -6,9 +6,13 @@
 """
 from scapy.all import *
 import copy
+import socket
+import threading
 
 __NOT_ESTABLISHED__ = "NOT Established"
 __ESTABLISHED__ = "Established"
+MODE_CLIENT = "CLIENT"
+MODE_SERVER = "SERVER"
 
 
 class TCP_CONNECT:
@@ -124,3 +128,32 @@ class TCP_CONNECT:
     def __del__(self):
         self.reset()
         # self.finish()
+
+
+class TcpHandler(threading.Thread):
+    def __init__(self, host="", ip="", src_port=0, dst_port=0, mode=""):
+        super(TcpHandler, self).__init__()
+
+        self.src_port = src_port
+        self.dst_port = dst_port
+        self.ip = ip
+        self.host = host
+        self.mode = mode
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def run(self):
+        if self.mode == MODE_SERVER:
+            print("setup server mode")
+            self.sock.bind((self.host, self.src_port))
+            self.sock.listen(1)
+            while True:
+                # 誰かがアクセスしてきたら、コネクションとアドレスを入れる
+                self.conn, self.addr = self.sock.accept()
+        elif self.mode == MODE_CLIENT:
+            print("setup client mode")
+            self.sock.connect((self.ip, self.dst_port))
+        else:
+            print("error")
+
+    def __del__(self):
+        self.sock.close()

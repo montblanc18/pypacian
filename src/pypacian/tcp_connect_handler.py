@@ -149,6 +149,7 @@ class TcpHandler(threading.Thread):
             while True:
                 # 誰かがアクセスしてきたら、コネクションとアドレスを入れる
                 self.conn, self.addr = self.sock.accept()
+            print("connected")
         elif self.mode == MODE_CLIENT:
             print("setup client mode")
             self.sock.connect((self.ip, self.dst_port))
